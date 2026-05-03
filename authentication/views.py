@@ -91,12 +91,12 @@ class EmailVerificationView(APIView):
     """
     POST /api/auth/activate/
 
-    Verify email and activate user account.
+    Verify email and activate user account using 8-character token.
 
     Request body:
     {
-        "uid": "base64_encoded_user_id",
-        "token": "verification_token"
+        "email": "user@example.com",
+        "token": "ABC12345"
     }
 
     Response:
@@ -117,13 +117,18 @@ class EmailVerificationView(APIView):
         serializer = EmailVerificationSerializer(data=request.data)
 
         if serializer.is_valid():
-            uid = serializer.validated_data['uid']
+            email = serializer.validated_data['email']
             token = serializer.validated_data['token']
 
-            user = verify_email_verification_token(uid, token)
+            user = verify_email_verification_token(token, email)
 
             if user is not None:
                 user.mark_email_verified()
+                # Clear the used token
+                user.email_verification_token = None
+                user.email_verification_token_expiry = None
+                user.save(update_fields=['email_verification_token', 'email_verification_token_expiry'])
+                
                 return Response(
                     {
                         'detail': 'Email verified successfully. Your account is now active.',

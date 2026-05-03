@@ -1,6 +1,6 @@
 asgiref==3.11.1
 attrs==26.1.0
-Django==5.2.13
+# Django==5.2.13
 django-cors-headers==4.9.0
 django-mongodb-backend==5.2.3
 djangorestframework==3.17.1

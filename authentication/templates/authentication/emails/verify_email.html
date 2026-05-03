@@ -26,20 +26,28 @@
             line-height: 1.6;
             margin: 10px 0;
         }
-        .cta-button {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            margin: 20px 0;
+        .token-box {
+            background-color: #f0f4ff;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .token {
+            font-size: 36px;
             font-weight: bold;
+            color: #007bff;
+            letter-spacing: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
         }
-        .cta-button:hover {
-            background-color: #0056b3;
+        .token-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
         }
-        .link-section {
+        .instructions {
             background-color: #f9f9f9;
             padding: 15px;
             border-radius: 4px;
@@ -69,23 +77,27 @@
         <p>Hi {{ user.name }},</p>
         
         <p>Thank you for registering with Sanad. To complete your registration and activate your account, 
-        please verify your email address by clicking the button below:</p>
+        please use the verification code below:</p>
         
-        <center>
-            <a href="{{ activation_url }}" class="cta-button">Verify Email Address</a>
-        </center>
+        <div class="token-box">
+            <div class="token-label">Your Verification Code:</div>
+            <div class="token">{{ token }}</div>
+        </div>
         
-        <div class="link-section">
-            <p><strong>Or copy and paste this link in your browser:</strong></p>
-            <p>{{ activation_url }}</p>
+        <div class="instructions">
+            <p><strong>How to verify your email:</strong></p>
+            <ol>
+                <li>Open the Sanad app or website</li>
+                <li>Go to the email verification page</li>
+                <li>Enter this verification code: <strong>{{ token }}</strong></li>
+                <li>Your account will be activated immediately</li>
+            </ol>
         </div>
         
         <div class="warning">
-            <strong>⚠️ This link will expire in 24 hours.</strong><br>
+            <strong>⚠️ This code will expire in 24 hours.</strong><br>
             If you didn't create this account, please ignore this email.
         </div>
-        
-        <p>If the button above doesn't work, you can also verify your email by visiting our app and entering the verification code.</p>
         
         <p>Best regards,<br><strong>The Sanad Team</strong></p>
         

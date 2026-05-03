@@ -13,8 +13,22 @@ from .utils import get_tokens_for_user
 User = get_user_model()
 
 
+class ObjectIdField(serializers.Field):
+    """Custom field to handle MongoDB ObjectId serialization."""
+    
+    def to_representation(self, value):
+        """Convert ObjectId to string."""
+        return str(value) if value else None
+    
+    def to_internal_value(self, data):
+        """Convert string to ObjectId."""
+        return data
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model."""
+    
+    id = ObjectIdField(read_only=True)
 
     class Meta:
         model = User
@@ -73,10 +87,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class EmailVerificationSerializer(serializers.Serializer):
-    """Serializer for email verification."""
+    """Serializer for email verification using 8-character token."""
 
-    uid = serializers.CharField(required=True)
-    token = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    token = serializers.CharField(required=True, max_length=8, min_length=8)
 
 
 class LoginSerializer(TokenObtainPairSerializer):

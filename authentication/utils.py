@@ -12,65 +12,62 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from datetime import timedelta
 import logging
+import secrets
+import string
 
 logger = logging.getLogger(__name__)
 
 
 class EmailTokenGenerator(PasswordResetTokenGenerator):
     """
-    Custom token generator for email verification and password reset.
+    Custom token generator for password reset.
     Generates secure tokens that expire after a certain period.
     """
 
     def _make_hash_value(self, user, timestamp):
-        """Include user email_verified_at for token invalidation on email change."""
-        return f"{user.pk}{user.email}{timestamp}{user.email_verified_at}"
+        """Include user password_changed_at for token invalidation on password change."""
+        return f"{user.pk}{user.email}{timestamp}{user.password_changed_at}"
 
 
 # Global token generator
 email_token_generator = EmailTokenGenerator()
 
 
-def generate_email_verification_token(user):
+def generate_email_verification_token():
     """
-    Generate a secure email verification token for user.
-
-    Args:
-        user: User instance
-
+    Generate a random 8-character alphanumeric verification token.
+    
     Returns:
-        Tuple of (uidb64, token)
+        String token (8 characters)
     """
-    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-    token = email_token_generator.make_token(user)
-    return uidb64, token
+    characters = string.ascii_letters + string.digits
+    token = ''.join(secrets.choice(characters) for _ in range(8))
+    return token
 
 
-def verify_email_verification_token(uidb64, token):
+def verify_email_verification_token(token, email):
     """
     Verify email verification token and return user if valid.
 
     Args:
-        uidb64: Base64 encoded user ID
-        token: Token string
+        token: Token string (8 characters)
+        email: User email
 
     Returns:
-        User instance or None if token is invalid
+        User instance or None if token is invalid or expired
     """
     try:
         from users.models import User
 
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
+        user = User.objects.get(email=email)
 
-        # Check token validity
-        if email_token_generator.check_token(user, token):
-            # Check if token has expired
-            if user.email_verified_at is None:
-                # Token is valid and user hasn't been verified yet
+        # Check if token matches and hasn't expired
+        if user.email_verification_token == token:
+            if user.email_verification_token_expiry and user.email_verification_token_expiry > timezone.now():
                 return user
+        
         return None
-    except (ValueError, User.DoesNotExist):
+    except User.DoesNotExist:
         return None
 
 
@@ -116,7 +113,8 @@ def verify_password_reset_token(uidb64, token):
 
 def send_email_verification(user):
     """
-    Send email verification link to user.
+    Send email verification token to user.
+    Generates a random 8-character token and sends it via email.
 
     Args:
         user: User instance
@@ -125,13 +123,17 @@ def send_email_verification(user):
         Boolean indicating success
     """
     try:
-        uidb64, token = generate_email_verification_token(user)
-        activation_url = f"{settings.FRONTEND_ACTIVATE_ACCOUNT_URL}?uid={uidb64}&token={token}"
+        # Generate random 8-character token
+        token = generate_email_verification_token()
+        
+        # Store token with 24-hour expiry
+        user.email_verification_token = token
+        user.email_verification_token_expiry = timezone.now() + timedelta(hours=24)
+        user.save(update_fields=['email_verification_token', 'email_verification_token_expiry'])
 
         context = {
             'user': user,
-            'activation_url': activation_url,
-            'frontend_url': settings.FRONTEND_URL,
+            'token': token,
         }
 
         # Try to render HTML email template, fall back to plain text
@@ -143,18 +145,23 @@ def send_email_verification(user):
         except Exception:
             html_message = f"""
             <h2>Welcome to Sanad, {user.name}!</h2>
-            <p>Please verify your email to activate your account.</p>
-            <p><a href="{activation_url}">Verify Email</a></p>
+            <p>Please verify your email using the code below:</p>
+            <h1 style="font-size: 36px; letter-spacing: 10px; font-weight: bold;">{token}</h1>
+            <p>This code will expire in 24 hours.</p>
+            <p>If you did not create this account, please ignore this email.</p>
             """
 
         subject = 'Verify Your Email - Sanad'
         message = f"""
-        Welcome to Sanad, {user.name}!
-        
-        Please verify your email by clicking the link below:
-        {activation_url}
-        
-        This link will expire in 24 hours.
+Welcome to Sanad, {user.name}!
+
+Please verify your email using the code below:
+
+{token}
+
+This code will expire in 24 hours.
+
+If you did not create this account, please ignore this email.
         """
 
         send_mail(
@@ -166,7 +173,7 @@ def send_email_verification(user):
             fail_silently=False,
         )
 
-        logger.info(f"Email verification sent to {user.email}")
+        logger.info(f"Email verification token sent to {user.email}")
         return True
 
     except Exception as e:
