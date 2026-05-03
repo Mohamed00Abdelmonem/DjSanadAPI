@@ -99,18 +99,10 @@ class LoginSerializer(TokenObtainPairSerializer):
     Extends TokenObtainPairSerializer to use email instead of username.
     """
 
-    username_field = User.USERNAME_FIELD  # Uses email
-    password_field = 'password'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Rename 'username' field to 'email'
-        self.fields['email'] = self.fields.pop('username')
+    username_field = User.USERNAME_FIELD  # Uses email from custom user model
 
     def validate(self, attrs):
         """Validate login credentials and check if user is active."""
-        # Rename email back to username for parent validation
-        attrs['username'] = attrs.pop('email')
         data = super().validate(attrs)
 
         # Check if user is active
