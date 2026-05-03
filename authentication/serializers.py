@@ -157,20 +157,17 @@ class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
     def validate_email(self, value):
-        """Check that user exists with this email."""
-        try:
-            user = User.objects.get(email=value)
-        except User.DoesNotExist:
-            # Don't reveal if email exists (security)
-            pass
+        """Ensure the provided email belongs to an existing user."""
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No account found with this email address.")
         return value
 
 
 class ResetPasswordSerializer(serializers.Serializer):
-    """Serializer for password reset with token."""
+    """Serializer for password reset with email and token."""
 
-    uid = serializers.CharField(required=True)
-    token = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    token = serializers.CharField(required=True, max_length=8, min_length=8)
     new_password = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
     new_password_confirm = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
 

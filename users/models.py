@@ -54,6 +54,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_verified_at = models.DateTimeField(null=True, blank=True)
     email_verification_token = models.CharField(max_length=8, null=True, blank=True)
     email_verification_token_expiry = models.DateTimeField(null=True, blank=True)
+
+    # For password reset tracking
+    password_reset_token = models.CharField(max_length=8, null=True, blank=True)
+    password_reset_token_expiry = models.DateTimeField(null=True, blank=True)
     
     # For password reset tracking
     password_changed_at = models.DateTimeField(default=timezone.now)
