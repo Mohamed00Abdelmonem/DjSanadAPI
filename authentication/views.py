@@ -12,6 +12,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 
@@ -243,7 +244,7 @@ class ForgotPasswordView(APIView):
     POST /api/auth/forgot-password/
 
     Request password reset email.
-    Sends reset link to user email.
+    Sends an 8-character reset code to user email.
 
     Request body:
     {
@@ -252,7 +253,7 @@ class ForgotPasswordView(APIView):
 
     Response:
     {
-        "detail": "If a user with this email exists, a password reset link has been sent."
+        "detail": "If a user with this email exists, a password reset code has been sent."
     }
     """
 
@@ -264,17 +265,12 @@ class ForgotPasswordView(APIView):
         if serializer.is_valid():
             email = serializer.validated_data['email']
 
-            try:
-                user = User.objects.get(email=email)
-                send_password_reset_email(user)
-            except User.DoesNotExist:
-                # Don't reveal if user exists
-                pass
+            user = User.objects.get(email=email)
+            send_password_reset_email(user)
 
-            # Always return success for security (user enumeration prevention)
             return Response(
                 {
-                    'detail': 'If a user with this email exists, a password reset link has been sent.'
+                    'detail': 'Password reset code has been sent to your email.'
                 },
                 status=status.HTTP_200_OK
             )
@@ -290,7 +286,7 @@ class ResetPasswordView(APIView):
 
     Request body:
     {
-        "uid": "base64_encoded_user_id",
+        "email": "user@example.com",
         "token": "reset_token",
         "new_password": "NewPassword123!",
         "new_password_confirm": "NewPassword123!"
@@ -308,13 +304,16 @@ class ResetPasswordView(APIView):
         serializer = ResetPasswordSerializer(data=request.data)
 
         if serializer.is_valid():
-            uid = serializer.validated_data['uid']
+            email = serializer.validated_data['email']
             token = serializer.validated_data['token']
 
-            user = verify_password_reset_token(uid, token)
+            user = verify_password_reset_token(email, token)
 
             if user is not None:
                 user.set_password(serializer.validated_data['new_password'])
+                user.password_changed_at = timezone.now()
+                user.password_reset_token = None
+                user.password_reset_token_expiry = None
                 user.save()
 
                 return Response(

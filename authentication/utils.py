@@ -2,9 +2,6 @@
 Utility functions for authentication and token management.
 """
 
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -18,22 +15,7 @@ import string
 logger = logging.getLogger(__name__)
 
 
-class EmailTokenGenerator(PasswordResetTokenGenerator):
-    """
-    Custom token generator for password reset.
-    Generates secure tokens that expire after a certain period.
-    """
-
-    def _make_hash_value(self, user, timestamp):
-        """Include user password_changed_at for token invalidation on password change."""
-        return f"{user.pk}{user.email}{timestamp}{user.password_changed_at}"
-
-
-# Global token generator
-email_token_generator = EmailTokenGenerator()
-
-
-def generate_email_verification_token():
+def generate_verification_code():
     """
     Generate a random 8-character alphanumeric verification token.
     
@@ -71,43 +53,37 @@ def verify_email_verification_token(token, email):
         return None
 
 
-def generate_password_reset_token(user):
+def generate_password_reset_token():
     """
-    Generate a secure password reset token for user.
-
-    Args:
-        user: User instance
+    Generate a random 8-character password reset token.
 
     Returns:
-        Tuple of (uidb64, token)
+        String token (8 characters)
     """
-    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-    token = email_token_generator.make_token(user)
-    return uidb64, token
+    return generate_verification_code()
 
 
-def verify_password_reset_token(uidb64, token):
+def verify_password_reset_token(email, token):
     """
     Verify password reset token and return user if valid.
 
     Args:
-        uidb64: Base64 encoded user ID
+        email: User email
         token: Token string
 
     Returns:
-        User instance or None if token is invalid
+        User instance or None if token is invalid or expired
     """
     try:
         from users.models import User
 
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
+        user = User.objects.get(email=email)
 
-        # Check token validity and expiry
-        if email_token_generator.check_token(user, token):
-            return user
+        if user.password_reset_token == token:
+            if user.password_reset_token_expiry and user.password_reset_token_expiry > timezone.now():
+                return user
         return None
-    except (ValueError, User.DoesNotExist):
+    except User.DoesNotExist:
         return None
 
 
@@ -124,7 +100,7 @@ def send_email_verification(user):
     """
     try:
         # Generate random 8-character token
-        token = generate_email_verification_token()
+        token = generate_verification_code()
         
         # Store token with 24-hour expiry
         user.email_verification_token = token
@@ -183,7 +159,7 @@ If you did not create this account, please ignore this email.
 
 def send_password_reset_email(user):
     """
-    Send password reset link to user.
+    Send password reset token to user.
 
     Args:
         user: User instance
@@ -192,13 +168,15 @@ def send_password_reset_email(user):
         Boolean indicating success
     """
     try:
-        uidb64, token = generate_password_reset_token(user)
-        reset_url = f"{settings.FRONTEND_RESET_PASSWORD_URL}?uid={uidb64}&token={token}"
+        token = generate_password_reset_token()
+
+        user.password_reset_token = token
+        user.password_reset_token_expiry = timezone.now() + timedelta(seconds=settings.PASSWORD_RESET_TOKEN_EXPIRY)
+        user.save(update_fields=['password_reset_token', 'password_reset_token_expiry'])
 
         context = {
             'user': user,
-            'reset_url': reset_url,
-            'frontend_url': settings.FRONTEND_URL,
+            'token': token,
         }
 
         # Try to render HTML email template, fall back to plain text
@@ -209,17 +187,21 @@ def send_password_reset_email(user):
             )
         except Exception:
             html_message = f"""
-            <p>Click the link below to reset your password:</p>
-            <p><a href="{reset_url}">Reset Password</a></p>
-            <p>This link will expire in 1 hour.</p>
+            <h2>Password Reset Request</h2>
+            <p>Please use the code below to reset your password:</p>
+            <h1 style="font-size: 36px; letter-spacing: 10px; font-weight: bold;">{token}</h1>
+            <p>This code will expire in 1 hour.</p>
             """
 
         subject = 'Reset Your Password - Sanad'
         message = f"""
-        Reset your password by clicking the link below:
-        {reset_url}
+        Hi {user.name},
+
+        Please use the code below to reset your password:
+
+        {token}
         
-        This link will expire in 1 hour.
+        This code will expire in 1 hour.
         
         If you didn't request this, ignore this email.
         """
@@ -233,7 +215,7 @@ def send_password_reset_email(user):
             fail_silently=False,
         )
 
-        logger.info(f"Password reset email sent to {user.email}")
+        logger.info(f"Password reset token sent to {user.email}")
         return True
 
     except Exception as e:
