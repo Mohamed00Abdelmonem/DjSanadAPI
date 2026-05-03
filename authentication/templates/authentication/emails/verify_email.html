@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .cta-button:hover {
+            background-color: #0056b3;
+        }
+        .link-section {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            border-top: 1px solid #ddd;
+            margin-top: 20px;
+            padding-top: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to Sanad! 🎉</h2>
+        
+        <p>Hi {{ user.name }},</p>
+        
+        <p>Thank you for registering with Sanad. To complete your registration and activate your account, 
+        please verify your email address by clicking the button below:</p>
+        
+        <center>
+            <a href="{{ activation_url }}" class="cta-button">Verify Email Address</a>
+        </center>
+        
+        <div class="link-section">
+            <p><strong>Or copy and paste this link in your browser:</strong></p>
+            <p>{{ activation_url }}</p>
+        </div>
+        
+        <div class="warning">
+            <strong>⚠️ This link will expire in 24 hours.</strong><br>
+            If you didn't create this account, please ignore this email.
+        </div>
+        
+        <p>If the button above doesn't work, you can also verify your email by visiting our app and entering the verification code.</p>
+        
+        <p>Best regards,<br><strong>The Sanad Team</strong></p>
+        
+        <div class="footer">
+            <p>© 2024 Sanad. All rights reserved.</p>
+            <p>This is an automated email, please do not reply to this address.</p>
+        </div>
+    </div>
+</body>
+</html>
