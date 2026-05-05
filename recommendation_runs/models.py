@@ -6,7 +6,7 @@ from profiles.models import Profile
 class RecommendationRun(models.Model):
     id = django_mongodb_backend.fields.ObjectIdAutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    # profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
     context = models.JSONField()
 

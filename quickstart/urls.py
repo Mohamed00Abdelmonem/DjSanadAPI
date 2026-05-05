@@ -25,5 +25,8 @@ urlpatterns = [
 
     # Assessment API
     path('api/assessment/', include('profiles.urls')),
+
+    # Recommendations API
+    path('api/recommendations/', include('recommendation_runs.urls')),
 ]
 
