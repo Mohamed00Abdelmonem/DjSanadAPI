@@ -22,5 +22,8 @@ urlpatterns = [
 
     # Other app URLs
     path('api/', include('users.urls')),
+
+    # Assessment API
+    path('api/assessment/', include('profiles.urls')),
 ]
 

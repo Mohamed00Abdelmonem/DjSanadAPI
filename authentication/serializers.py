@@ -104,7 +104,6 @@ class LoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         """Validate login credentials and check if user is active."""
         data = super().validate(attrs)
-
         # Check if user is active
         if not self.user.is_active:
             raise serializers.ValidationError(
