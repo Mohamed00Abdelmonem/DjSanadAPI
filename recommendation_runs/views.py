@@ -36,6 +36,37 @@ def _serialize_profile(profile: Profile):
 
 
 class RecommendationCreateView(APIView):
+	"""
+	POST /api/recommendations/
+
+	Generate recommendations for the authenticated user.
+	Requires an existing profile for the user.
+
+	Authentication:
+	Authorization: Bearer <access_token>
+
+	Request body:
+	{
+		"context": {
+			"time_of_day": "morning",
+			"user_mood": "calm",
+			"limit": 8
+		}
+	}
+
+	Response:
+	{
+		"status": "success",
+		"message": "...",
+		"data": {
+			"timestamp": "...",
+			"context_used": { ... },
+			"recommendations": [ ... ],
+			"summary": { ... },
+			"metadata": { ... }
+		}
+	}
+	"""
 	permission_classes = (IsAuthenticated,)
 
 	def post(self, request):
@@ -119,7 +150,7 @@ class RecommendationCreateView(APIView):
 				"status": "success",
 				"message": service_data.get("message", "Recommendations generated successfully"),
 				"data": {
-					"timestamp": service_data["timestamp"],
+					# "timestamp": service_data["timestamp"],
 					"context_used": context_used,
 					"recommendations": service_data["recommendations"],
 					"summary": service_data["summary"],

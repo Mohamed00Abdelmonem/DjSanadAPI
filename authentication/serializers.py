@@ -32,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'name', 'is_active', 'is_staff', 'created_at', 'updated_at')
+        fields = ('id', 'email', 'name', 'date_of_birth', 'is_active', 'is_staff', 'created_at', 'updated_at')
         read_only_fields = ('id', 'created_at', 'updated_at', 'is_staff')
 
 
@@ -44,10 +44,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
     password_confirm = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    date_of_birth = serializers.DateField(required=True)
 
     class Meta:
         model = User
-        fields = ('email', 'name', 'password', 'password_confirm')
+        fields = ('email', 'name', 'date_of_birth', 'password', 'password_confirm')
 
     def validate(self, data):
         """Validate that passwords match and password is strong."""
@@ -80,6 +81,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             email=validated_data['email'],
             name=validated_data['name'],
+            date_of_birth=validated_data['date_of_birth'],
             password=password
         )
 

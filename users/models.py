@@ -42,6 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     email = models.EmailField(unique=True, db_index=True)
     name = models.CharField(max_length=255)
+    date_of_birth = models.DateField(null=True, blank=True)
     
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)

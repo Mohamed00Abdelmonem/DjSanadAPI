@@ -78,7 +78,6 @@ def call_recommendations_service(
         raise ExternalAPIError("Invalid response structure: missing data.")
 
     required_fields = [
-        "timestamp",
         "recommendations",
         "summary",
         "metadata",
@@ -91,7 +90,6 @@ def call_recommendations_service(
 
     result = {
         "message": response_json.get("message", "Recommendations generated successfully"),
-        "timestamp": payload_data["timestamp"],
         "context_used": payload_data.get("context_used"),
         "recommendations": payload_data["recommendations"],
         "summary": payload_data["summary"],
