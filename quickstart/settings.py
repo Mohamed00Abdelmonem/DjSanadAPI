@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'recommendation_runs',
     'chat_sessions',
     'chat_messages',
+    'activities',
 ]
 
 MIDDLEWARE = [
