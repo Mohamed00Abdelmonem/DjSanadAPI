@@ -261,6 +261,176 @@ curl -X POST http://localhost:8000/api/auth/logout/ \
 ---
 
 # ============================================================================
+# ACTIVITIES API - EXAMPLE REQUESTS & RESPONSES
+# ============================================================================
+
+# NOTE: All activities endpoints require JWT authentication
+# Authorization: Bearer <access_token>
+
+# ============================================================================
+# 1. CREATE ACTIVITY (Admin only)
+# ============================================================================
+
+curl -X POST http://localhost:8000/api/activities/ \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Deep Breathing",
+    "description": "Helps reduce stress",
+    "category": "breathing",
+    "time_takes": 5,
+    "emoji": "\ud83e\uddd8",
+    "steps": [
+      "Sit comfortably",
+      "Close your eyes",
+      "Take a deep breath"
+    ]
+  }'
+
+# SUCCESS RESPONSE (201):
+{
+  "id": "507f1f77bcf86cd799439012",
+  "name": "Deep Breathing",
+  "description": "Helps reduce stress",
+  "category": "breathing",
+  "time_takes": 5,
+  "emoji": "\ud83e\uddd8",
+  "steps": [
+    "Sit comfortably",
+    "Close your eyes",
+    "Take a deep breath"
+  ],
+  "average_rating": 0.0,
+  "total_ratings": 0
+}
+
+# ============================================================================
+# 2. LIST ACTIVITIES (Authenticated users only)
+# ============================================================================
+
+curl -X GET "http://localhost:8000/api/activities/?category=breathing" \
+  -H "Authorization: Bearer <access_token>"
+
+# SUCCESS RESPONSE (200):
+[
+  {
+    "id": "507f1f77bcf86cd799439012",
+    "name": "Deep Breathing",
+    "description": "Helps reduce stress",
+    "category": "breathing",
+    "time_takes": 5,
+    "emoji": "\ud83e\uddd8",
+    "steps": [
+      "Sit comfortably",
+      "Close your eyes",
+      "Take a deep breath"
+    ],
+    "average_rating": 4.8,
+    "total_ratings": 120
+  }
+]
+
+# ============================================================================
+# 3. GET ACTIVITY DETAIL
+# ============================================================================
+
+curl -X GET http://localhost:8000/api/activities/507f1f77bcf86cd799439012/ \
+  -H "Authorization: Bearer <access_token>"
+
+# SUCCESS RESPONSE (200):
+{
+  "id": "507f1f77bcf86cd799439012",
+  "name": "Deep Breathing",
+  "description": "Helps reduce stress",
+  "category": "breathing",
+  "time_takes": 5,
+  "emoji": "\ud83e\uddd8",
+  "steps": [
+    "Sit comfortably",
+    "Close your eyes",
+    "Take a deep breath"
+  ],
+  "average_rating": 4.8,
+  "total_ratings": 120
+}
+
+# ============================================================================
+# 4. UPDATE ACTIVITY (Admin only)
+# ============================================================================
+
+curl -X PATCH http://localhost:8000/api/activities/507f1f77bcf86cd799439012/ \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "time_takes": 6,
+    "steps": [
+      "Sit comfortably",
+      "Close your eyes",
+      "Take a deep breath",
+      "Exhale slowly"
+    ]
+  }'
+
+# SUCCESS RESPONSE (200):
+{
+  "id": "507f1f77bcf86cd799439012",
+  "name": "Deep Breathing",
+  "description": "Helps reduce stress",
+  "category": "breathing",
+  "time_takes": 6,
+  "emoji": "\ud83e\uddd8",
+  "steps": [
+    "Sit comfortably",
+    "Close your eyes",
+    "Take a deep breath",
+    "Exhale slowly"
+  ],
+  "average_rating": 4.8,
+  "total_ratings": 120
+}
+
+# ============================================================================
+# 5. DELETE ACTIVITY (Admin only - Soft delete)
+# ============================================================================
+
+curl -X DELETE http://localhost:8000/api/activities/507f1f77bcf86cd799439012/ \
+  -H "Authorization: Bearer <access_token>"
+
+# SUCCESS RESPONSE (204):
+# No content. The activity is soft deleted and will not appear in lists.
+
+# ============================================================================
+# 6. RATE ACTIVITY (Authenticated users only)
+# ============================================================================
+
+curl -X POST http://localhost:8000/api/activities/507f1f77bcf86cd799439012/rate/ \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rate": 5
+  }'
+
+# SUCCESS RESPONSE (200):
+{
+  "id": "507f1f77bcf86cd799439012",
+  "name": "Deep Breathing",
+  "description": "Helps reduce stress",
+  "category": "breathing",
+  "time_takes": 6,
+  "emoji": "\ud83e\uddd8",
+  "steps": [
+    "Sit comfortably",
+    "Close your eyes",
+    "Take a deep breath",
+    "Exhale slowly"
+  ],
+  "average_rating": 4.9,
+  "total_ratings": 121
+}
+
+---
+
+# ============================================================================
 # AUTHENTICATION FLOW
 # ============================================================================
 

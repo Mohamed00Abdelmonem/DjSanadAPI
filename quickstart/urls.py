@@ -28,5 +28,8 @@ urlpatterns = [
 
     # Recommendations API
     path('api/recommendations/', include('recommendation_runs.urls')),
+
+    # Activities API
+    path('api/activities/', include('activities.urls')),
 ]
 
