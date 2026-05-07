@@ -36,6 +36,25 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at', 'updated_at', 'is_staff')
 
 
+class MeUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating authenticated user's profile fields."""
+
+    class Meta:
+        model = User
+        fields = ('name', 'date_of_birth')
+        extra_kwargs = {
+            'name': {'required': False},
+            'date_of_birth': {'required': False},
+        }
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError(
+                'Provide at least one of: name, date_of_birth.'
+            )
+        return attrs
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     """
     Serializer for user registration.

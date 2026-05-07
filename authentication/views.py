@@ -28,6 +28,7 @@ from .serializers import (
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
     UserSerializer,
+    MeUpdateSerializer,
     GoogleAuthSerializer,
 )
 from .utils import (
@@ -424,6 +425,7 @@ class GoogleAuthView(APIView):
 class MeView(APIView):
     """
     GET /api/auth/me/
+    PATCH /api/auth/me/
 
     Get current authenticated user details.
 
@@ -447,6 +449,22 @@ class MeView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        serializer = MeUpdateSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                UserSerializer(request.user).data,
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
