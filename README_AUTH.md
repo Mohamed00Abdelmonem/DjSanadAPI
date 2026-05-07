@@ -74,6 +74,7 @@ All endpoints are under `/api/auth/`
 | POST | `/register/` | Create new user account |
 | POST | `/activate/` | Verify email & activate account |
 | POST | `/login/` | Login with email/password |
+| POST | `/google/` | Login with Google ID token |
 | POST | `/token/refresh/` | Get new access token |
 | GET | `/me/` | Get authenticated user info |
 | POST | `/change-password/` | Change password (authenticated) |
@@ -111,6 +112,16 @@ curl -X POST http://localhost:8000/api/auth/login/ \
 #   "email": "user@example.com",
 #   "name": "John Doe"
 # }
+```
+
+### Quick Example: Google Login
+
+```bash
+curl -X POST http://localhost:8000/api/auth/google/ \
+   -H "Content-Type: application/json" \
+   -d '{
+      "id_token": "GOOGLE_ID_TOKEN"
+   }'
 ```
 
 ### Quick Example: Authenticated Request

@@ -15,6 +15,10 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
+from django.conf import settings
+
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
 
 from .serializers import (
     RegisterSerializer,
@@ -24,6 +28,7 @@ from .serializers import (
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
     UserSerializer,
+    GoogleAuthSerializer,
 )
 from .utils import (
     send_email_verification,
@@ -329,6 +334,91 @@ class ResetPasswordView(APIView):
                 )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GoogleAuthView(APIView):
+    """
+    POST /api/auth/google/
+
+    Sign in with a Google ID token and return the existing JWT pair.
+
+    Request body:
+    {
+        "id_token": "google-id-token"
+    }
+    """
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = GoogleAuthSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        client_id = getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', '')
+        if not client_id:
+            return Response(
+                {'detail': 'Google OAuth client ID is not configured.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
+            payload = google_id_token.verify_oauth2_token(
+                serializer.validated_data['id_token'],
+                google_requests.Request(),
+                client_id,
+            )
+        except ValueError:
+            return Response(
+                {'detail': 'Invalid Google token.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not payload.get('email_verified'):
+            return Response(
+                {'detail': 'Google account email is not verified.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = payload.get('email')
+        if not email:
+            return Response(
+                {'detail': 'Google token did not include an email address.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        name = payload.get('name') or payload.get('given_name') or email.split('@')[0]
+
+        user = User.objects.filter(email=email).first()
+        if user is None:
+            user = User.objects.create_user(
+                email=email,
+                name=name,
+                password=None,
+            )
+
+        updated_fields = []
+        if not user.is_active:
+            user.is_active = True
+            updated_fields.append('is_active')
+        if not user.email_verified_at:
+            user.email_verified_at = timezone.now()
+            updated_fields.append('email_verified_at')
+        if not user.name and name:
+            user.name = name
+            updated_fields.append('name')
+
+        if updated_fields:
+            updated_fields.append('updated_at')
+            user.save(update_fields=updated_fields)
+
+        tokens = get_tokens_for_user(user)
+        return Response(
+            {
+                **tokens,
+                'user': UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class MeView(APIView):

@@ -190,6 +190,12 @@ class ResetPasswordSerializer(serializers.Serializer):
         return data
 
 
+class GoogleAuthSerializer(serializers.Serializer):
+    """Serializer for Google sign-in using an ID token."""
+
+    id_token = serializers.CharField(required=True)
+
+
 class RefreshTokenSerializer(serializers.Serializer):
     """Serializer for token refresh."""
 

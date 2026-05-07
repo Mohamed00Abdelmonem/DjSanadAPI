@@ -252,6 +252,12 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@sanad.com')
 
 # ============================================================================
+# GOOGLE OAUTH CONFIGURATION
+# ============================================================================
+
+GOOGLE_OAUTH_CLIENT_ID = os.getenv('GOOGLE_OAUTH_CLIENT_ID', '')
+
+# ============================================================================
 # FRONTEND URL (for email links)
 # ============================================================================
 
