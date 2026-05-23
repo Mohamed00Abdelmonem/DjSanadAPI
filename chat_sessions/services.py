@@ -61,9 +61,9 @@ def call_chat_service(
 
     try:
         if files:
-            response = session.post(endpoint, data=payload, files=files, timeout=30)
+            response = session.post(endpoint, data=payload, files=files, timeout=60)
         else:
-            response = session.post(endpoint, json=payload, timeout=15)
+            response = session.post(endpoint, json=payload, timeout=60)
     except requests.Timeout as exc:
         logger.warning("Chat external API timeout.")
         raise ExternalAPIError("External service timeout.") from exc

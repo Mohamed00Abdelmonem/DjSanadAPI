@@ -53,11 +53,13 @@ class RecommendationCreateView(APIView):
 	Response:
 	{
 		"status": "success",
-		"ui_message": "تم التخصيص بنجاح",
-		"severity": "info",
+		"message": "...",
 		"data": {
+			"timestamp": "...",
+			"context_used": { ... },
 			"recommendations": [ ... ],
-			"count": 5
+			"summary": { ... },
+			"metadata": { ... }
 		}
 	}
 	"""
@@ -119,7 +121,7 @@ class RecommendationCreateView(APIView):
 				status=status.HTTP_500_INTERNAL_SERVER_ERROR,
 			)
 
-		context_used = context
+		context_used = service_data.get("context_used") or context
 
 		try:
 			with transaction.atomic():
@@ -127,7 +129,7 @@ class RecommendationCreateView(APIView):
 					user=request.user,
 					context=context_used,
 					recommendations=service_data["recommendations"],
-					summary=service_data.get("summary") or {},
+					summary=service_data["summary"],
 				)
 		except Exception:
 			logger.exception("Failed to save recommendation run.")
@@ -142,11 +144,13 @@ class RecommendationCreateView(APIView):
 		return Response(
 			{
 				"status": "success",
-				"ui_message": service_data.get("ui_message", "تم التخصيص بنجاح"),
-				"severity": service_data.get("severity", "info"),
+				"message": service_data.get("message", "Recommendations generated successfully"),
 				"data": {
+					# "timestamp": service_data["timestamp"],
+					"context_used": context_used,
 					"recommendations": service_data["recommendations"],
-					"count": service_data.get("count", len(service_data["recommendations"])),
+					"summary": service_data["summary"],
+					"metadata": service_data["metadata"],
 				},
 			},
 			status=status.HTTP_201_CREATED,

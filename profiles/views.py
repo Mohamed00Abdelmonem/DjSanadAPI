@@ -14,52 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class AssessmentCreateView(APIView):
-    """
-    POST api/assessment/
-
-    Create a new assessment profile for the authenticated user.
-    If a profile already exists, it is replaced with a new one.
-
-    Authentication:
-    Authorization: Bearer <access_token>
-
-    Request body:
-    {
-        "language": "ar",
-        "answers": {
-            "q1_social_interaction": 3,
-            "q2_eye_contact": 2,
-            "q3_conversation": 2,
-            "q5_auditory": 2,
-            "q6_visual": 1,
-            "q7_tactile": 3
-        }
-    }
-
-    Response:
-    {
-        "status": "success",
-        "message": "Profile created successfully",
-        "data": {
-            "profile_id": "user_1779493039556",
-            "profile": {
-                "language": "ar",
-                "social_analysis": {
-                    "level": "عالي",
-                    "score": 7
-                },
-                "sensory_analysis": {
-                    "types": ["سمعية", "لمسية"],
-                    "severity": "عالية"
-                },
-                "support_analysis": {
-                    "types": ["حسي"],
-                    "primary": "حسي"
-                }
-            }
-        }
-    }
-    """
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
