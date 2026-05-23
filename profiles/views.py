@@ -27,16 +27,12 @@ class AssessmentCreateView(APIView):
     {
         "language": "ar",
         "answers": {
-            "q1_social_interaction": 2,
-            "q2_eye_contact": 1,
-            "q3_conversation": 0,
-            "q4_understanding_emotions": "...",
-            "q5_auditory": 3,
-            "q6_visual": 2,
-            "q7_tactile": 3,
-            "q8_sensory_overload": "...",
-            "q9_routine": 0,
-            "q10_support_needed": "..."
+            "q1_social_interaction": 3,
+            "q2_eye_contact": 2,
+            "q3_conversation": 2,
+            "q5_auditory": 2,
+            "q6_visual": 1,
+            "q7_tactile": 3
         }
     }
 
@@ -45,17 +41,22 @@ class AssessmentCreateView(APIView):
         "status": "success",
         "message": "Profile created successfully",
         "data": {
-            "profile_id": "...",
-            "language": "ar",
-            "version": "1.0",
-            "summary": { ... },
-            "social": { ... },
-            "sensory": { ... },
-            "support": { ... },
-            "raw_data": { ... },
-            "metadata": { ... },
-            "created_at": "...",
-            "updated_at": "..."
+            "profile_id": "user_1779493039556",
+            "profile": {
+                "language": "ar",
+                "social_analysis": {
+                    "level": "عالي",
+                    "score": 7
+                },
+                "sensory_analysis": {
+                    "types": ["سمعية", "لمسية"],
+                    "severity": "عالية"
+                },
+                "support_analysis": {
+                    "types": ["حسي"],
+                    "primary": "حسي"
+                }
+            }
         }
     }
     """
@@ -129,7 +130,10 @@ class AssessmentCreateView(APIView):
             {
                 "status": "success",
                 "message": "Profile created successfully",
-                "data": ProfileResponseSerializer(profile).data,
+                "data": {
+                    "profile_id": profile.profile_id,
+                    "profile": ProfileResponseSerializer(profile).data,
+                },
             },
             status=status.HTTP_201_CREATED,
         )

@@ -9,15 +9,11 @@ class Profile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     language = models.CharField(max_length=10)
-    version = models.CharField(max_length=10, default="1.0")
 
     # 🔥 Store full nested structure
-    summary = models.JSONField()
-    social = models.JSONField()
-    sensory = models.JSONField()
-    support = models.JSONField()
-    raw_data = models.JSONField()
-    metadata = models.JSONField()
+    social_analysis = models.JSONField(default=dict)
+    sensory_analysis = models.JSONField(default=dict)
+    support_analysis = models.JSONField(default=dict)
 
     assessment_completed = models.BooleanField(default=True)
 

@@ -51,11 +51,7 @@ def call_assessment_service(payload: Dict[str, Any]) -> Dict[str, Any]:
     if not base_url:
         raise ExternalAPIConfigError("External service BASE_URL is not configured.")
 
-    normalized_base = base_url.rstrip("/")
-    if normalized_base.endswith("/assessment"):
-        endpoint = normalized_base
-    else:
-        endpoint = f"{normalized_base}/assessment"
+    endpoint = base_url
 
     session = _build_session()
     logger.info("Assessment external API request started.")
@@ -80,24 +76,20 @@ def call_assessment_service(payload: Dict[str, Any]) -> Dict[str, Any]:
     except ValueError as exc:
         raise ExternalAPIError("External service returned invalid JSON.") from exc
 
-    # ✅ FIX 2: Navigate correct structure
+    # ✅ Navigate correct structure
     try:
-        profile = response_json["data"]["profile"]
+        data = response_json["data"]
+        profile_id = data["profile_id"]
+        profile = data["profile"]
     except KeyError as exc:
-        raise ExternalAPIError("Invalid response structure: missing data.profile") from exc
+        raise ExternalAPIError("Invalid response structure: missing data, profile_id, or profile") from exc
 
-    # ✅ FIX 3: Required fields (removed updated_at)
+    # ✅ Required fields
     required_fields = [
-        "profile_id",
         "language",
-        "version",
-        "summary",
-        "social",
-        "sensory",
-        "support",
-        "raw_data",
-        "metadata",
-        "created_at",
+        "social_analysis",
+        "sensory_analysis",
+        "support_analysis",
     ]
 
     missing = [field for field in required_fields if field not in profile]
@@ -106,27 +98,26 @@ def call_assessment_service(payload: Dict[str, Any]) -> Dict[str, Any]:
             "External service response missing fields: " + ", ".join(missing)
         )
 
-    # ✅ FIX 4: Handle timestamps safely
-    created_at = _parse_timestamp(profile["created_at"], "created_at")
+    # ✅ Handle timestamps safely
+    created_at_raw = profile.get("created_at") or data.get("created_at") or response_json.get("created_at")
+    if created_at_raw:
+        created_at = _parse_timestamp(created_at_raw, "created_at")
+    else:
+        created_at = timezone.now()
 
-    # updated_at not provided → fallback strategy
-    updated_at_raw = profile.get("updated_at")
+    updated_at_raw = profile.get("updated_at") or data.get("updated_at") or response_json.get("updated_at")
     if updated_at_raw:
         updated_at = _parse_timestamp(updated_at_raw, "updated_at")
     else:
-        updated_at = created_at  # fallback
+        updated_at = created_at
 
     # ✅ Final normalized result
     result = {
-        "profile_id": profile["profile_id"],
+        "profile_id": profile_id,
         "language": profile["language"],
-        "version": profile.get("version", "1.0"),
-        "summary": profile["summary"],
-        "social": profile["social"],
-        "sensory": profile["sensory"],
-        "support": profile["support"],
-        "raw_data": profile["raw_data"],
-        "metadata": profile["metadata"],
+        "social_analysis": profile["social_analysis"],
+        "sensory_analysis": profile["sensory_analysis"],
+        "support_analysis": profile["support_analysis"],
         "created_at": created_at,
         "updated_at": updated_at,
     }
