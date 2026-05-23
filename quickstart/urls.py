@@ -31,5 +31,8 @@ urlpatterns = [
 
     # Activities API
     path('api/activities/', include('activities.urls')),
+
+    # Chat API
+    path('api/chat/', include('chat_sessions.urls')),
 ]
 

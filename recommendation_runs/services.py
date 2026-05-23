@@ -40,14 +40,22 @@ def call_recommendations_service(
     if not base_url:
         raise ExternalAPIConfigError("External service BASE_URL is not configured.")
 
-    normalized_base = base_url.rstrip("/")
-    if normalized_base.endswith("/recommendations"):
-        endpoint = normalized_base
-    else:
-        endpoint = f"{normalized_base}/recommendations"
+    # normalized_base = base_url.rstrip("/")
+    # if normalized_base.endswith("/recommendations"):
+    #     endpoint = normalized_base
+    # else:
+    #     endpoint = f"{normalized_base}/recommendations"
+    endpoint = base_url
 
     payload = {
-        "user_profile": user_profile,
+        "type": "recommendation",
+        "profile_id": user_profile.get("profile_id"),
+        "user_profile": {
+            "language": user_profile.get("language"),
+            "social_analysis": user_profile.get("social_analysis"),
+            "sensory_analysis": user_profile.get("sensory_analysis"),
+            "support_analysis": user_profile.get("support_analysis"),
+        },
         "context": context,
     }
 
@@ -79,8 +87,6 @@ def call_recommendations_service(
 
     required_fields = [
         "recommendations",
-        "summary",
-        "metadata",
     ]
     missing = [field for field in required_fields if field not in payload_data]
     if missing:
@@ -89,11 +95,10 @@ def call_recommendations_service(
         )
 
     result = {
-        "message": response_json.get("message", "Recommendations generated successfully"),
-        "context_used": payload_data.get("context_used"),
+        "ui_message": response_json.get("ui_message", "تم التخصيص بنجاح"),
+        "severity": response_json.get("severity", "info"),
         "recommendations": payload_data["recommendations"],
-        "summary": payload_data["summary"],
-        "metadata": payload_data["metadata"],
+        "count": payload_data.get("count", len(payload_data["recommendations"])),
     }
 
     logger.info("Recommendations external API response parsed.")
