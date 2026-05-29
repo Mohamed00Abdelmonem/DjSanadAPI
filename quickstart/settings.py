@@ -10,32 +10,50 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import django_mongodb_backend
-import os
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+import os
+
+import django_mongodb_backend
+from django.core.exceptions import ImproperlyConfigured
+
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 # Load environment variables from .env file (optional)
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+
+    load_dotenv(BASE_DIR / '.env')
 except ImportError:
     pass
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+
+def env_bool(name, default='False'):
+    return os.getenv(name, default).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def env_list(name, default=''):
+    return [item.strip() for item in os.getenv(name, default).split(',') if item.strip()]
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w-t201c%#vzbzhj67vhh+v=xfp4n-_v-_%=kl*w(6aux_d^k!&'
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured('SECRET_KEY environment variable must be set')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool('DEBUG', 'False')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1],.pythonanywhere.com')
+pythonanywhere_host = os.getenv('PYTHONANYWHERE_HOST')
+if pythonanywhere_host and pythonanywhere_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(pythonanywhere_host)
 
 
 # Application definition
@@ -68,6 +86,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -100,8 +119,12 @@ WSGI_APPLICATION = 'quickstart.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+mongodb_uri = os.getenv('MONGODB_URI')
+if not mongodb_uri:
+    raise ImproperlyConfigured('MONGODB_URI environment variable must be set')
+
 DATABASES = {
-    "default": django_mongodb_backend.parse_uri("mongodb+srv://sanaduser:sanad1q2w3e4r5t@sanad.zaxccpo.mongodb.net/sanad?appName=Sanad"),
+    'default': django_mongodb_backend.parse_uri(mongodb_uri),
 }
 
 # Password validation
@@ -138,7 +161,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -247,7 +280,7 @@ CORS_ALLOW_CREDENTIALS = True
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'True')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@sanad.com')
@@ -267,7 +300,7 @@ FRONTEND_RESET_PASSWORD_URL = os.getenv('FRONTEND_RESET_PASSWORD_URL', f'{FRONTE
 FRONTEND_ACTIVATE_ACCOUNT_URL = os.getenv('FRONTEND_ACTIVATE_ACCOUNT_URL', f'{FRONTEND_URL}/activate')
 
 # ============================================================================
-# TOKEN EXPIRATION (in seconds)
+# TOKEN EXPIRATION SETTINGS
 # ============================================================================
 
 EMAIL_VERIFICATION_TOKEN_EXPIRY = int(os.getenv('EMAIL_VERIFICATION_TOKEN_EXPIRY', '86400'))  # 24 hours
@@ -295,6 +328,6 @@ LOGGING = {
 # SECURITY SETTINGS
 # ============================================================================
 
-SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
-SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
-CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', 'False')
+SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', 'False')
+CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', 'False')

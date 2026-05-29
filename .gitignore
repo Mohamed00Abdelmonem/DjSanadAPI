@@ -4,5 +4,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+docs/
 
 __pycache__
+
+
