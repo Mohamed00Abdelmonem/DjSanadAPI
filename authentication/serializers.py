@@ -70,6 +70,7 @@ class MeResponseSerializer(UserSerializer):
         if not profile:
             print("No profile found for user:", obj.email)  # Debug statement
             return {}
+        print("Profile found for user:", obj.email, "Profile ID:", profile.profile_id)  # Debug statement
         return ProfileResponseSerializer(profile).data
 
 
