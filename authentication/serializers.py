@@ -61,18 +61,19 @@ class MeResponseSerializer(UserSerializer):
     """Serializer for authenticated user details with optional profile data."""
 
     profile = serializers.SerializerMethodField()
+    tookAssessment = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + ('profile',)
+        fields = UserSerializer.Meta.fields + ('profile', 'tookAssessment')
 
     def get_profile(self, obj):
-        print("Getting profile for user:", obj.email)  # Debug statement
         profile = Profile.objects.filter(user=obj).first()
         if not profile:
-            print("No profile found for user:", obj.email)  # Debug statement
-            return {}
-        print("Profile found for user:", obj.email, "Profile ID:", profile.profile_id)  # Debug statement
+            return None
         return ProfileResponseSerializer(profile).data
+
+    def get_tookAssessment(self, obj):
+        return Profile.objects.filter(user=obj).exists()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
