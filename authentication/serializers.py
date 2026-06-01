@@ -68,7 +68,8 @@ class MeResponseSerializer(UserSerializer):
     def get_profile(self, obj):
         profile = Profile.objects.filter(user=obj).first()
         if not profile:
-            return None
+            print("No profile found for user:", obj.email)  # Debug statement
+            return {}
         return ProfileResponseSerializer(profile).data
 
 
