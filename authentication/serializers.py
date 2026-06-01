@@ -66,6 +66,7 @@ class MeResponseSerializer(UserSerializer):
         fields = UserSerializer.Meta.fields + ('profile',)
 
     def get_profile(self, obj):
+        print("Getting profile for user:", obj.email)  # Debug statement
         profile = Profile.objects.filter(user=obj).first()
         if not profile:
             print("No profile found for user:", obj.email)  # Debug statement
