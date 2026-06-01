@@ -9,6 +9,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .utils import get_tokens_for_user
+from profiles.models import Profile
+from profiles.serializers import ProfileResponseSerializer
 
 User = get_user_model()
 
@@ -53,6 +55,21 @@ class MeUpdateSerializer(serializers.ModelSerializer):
                 'Provide at least one of: name, date_of_birth.'
             )
         return attrs
+
+
+class MeResponseSerializer(UserSerializer):
+    """Serializer for authenticated user details with optional profile data."""
+
+    profile = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ('profile',)
+
+    def get_profile(self, obj):
+        profile = Profile.objects.filter(user=obj).first()
+        if not profile:
+            return None
+        return ProfileResponseSerializer(profile).data
 
 
 class RegisterSerializer(serializers.ModelSerializer):

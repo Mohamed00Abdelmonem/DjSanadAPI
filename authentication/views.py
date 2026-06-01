@@ -29,6 +29,7 @@ from .serializers import (
     ResetPasswordSerializer,
     UserSerializer,
     MeUpdateSerializer,
+    MeResponseSerializer,
     GoogleAuthSerializer,
 )
 from .utils import (
@@ -447,7 +448,7 @@ class MeView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        serializer = UserSerializer(request.user)
+        serializer = MeResponseSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
@@ -460,7 +461,7 @@ class MeView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(
-                UserSerializer(request.user).data,
+                MeResponseSerializer(request.user).data,
                 status=status.HTTP_200_OK,
             )
 
