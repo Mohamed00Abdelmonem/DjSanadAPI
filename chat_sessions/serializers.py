@@ -24,6 +24,19 @@ class ChatMessageRequestSerializer(serializers.Serializer):
     image_data = serializers.FileField(required=False, allow_empty_file=False)
     audio = serializers.FileField(required=False, allow_empty_file=False)
 
+    def validate(self, attrs):
+        message = attrs.get("message", "").strip()
+        image_file = attrs.get("image_data")
+        audio_file = attrs.get("audio")
+
+        if not any((message, image_file, audio_file)):
+            raise serializers.ValidationError(
+                "Provide at least one of message, image_data, or audio."
+            )
+
+        attrs["message"] = message
+        return attrs
+
 
 class ChatMessageResponseSerializer(serializers.ModelSerializer):
     class Meta:

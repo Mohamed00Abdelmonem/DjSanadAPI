@@ -251,6 +251,30 @@ curl -X POST http://localhost:8000/api/auth/logout/ \
 ---
 
 # ============================================================================
+# 10. CHAT MESSAGE - Send text with optional uploaded image file
+# ============================================================================
+
+curl -X POST http://localhost:8000/api/chat/messages/ \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -F "session_id=session_123456789abc" \
+  -F "message=Can you describe this image?" \
+  -F "image_data=@/path/to/photo.jpg"
+
+# IMAGE-ONLY REQUEST:
+curl -X POST http://localhost:8000/api/chat/messages/ \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -F "session_id=session_123456789abc" \
+  -F "image_data=@/path/to/photo.jpg"
+
+# SUCCESS RESPONSE (201):
+{
+  "status": "success",
+  "ai_response": "..."
+}
+
+---
+
+# ============================================================================
 # API DOCUMENTATION
 # ============================================================================
 
@@ -539,4 +563,3 @@ curl -X POST http://localhost:8000/api/activities/507f1f77bcf86cd799439012/rate/
 # 4. CORS errors?
 #    - Check CORS_ALLOWED_ORIGINS in settings.py
 #    - Make sure frontend URL is in the list
-
