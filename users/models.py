@@ -3,6 +3,10 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 from django.utils import timezone
 import django_mongodb_backend
 
+class Role(models.TextChoices):
+    PATIENT = 'patient', 'Patient'
+    THERAPIST = 'therapist', 'Therapist'
+    PARENT = 'parent', 'Parent'
 
 class CustomUserManager(BaseUserManager):
     """Custom user manager for email-based authentication."""
@@ -62,6 +66,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     # For password reset tracking
     password_changed_at = models.DateTimeField(default=timezone.now)
+
+
+    role = models.CharField(max_length=50, choices=Role.choices, default=Role.PATIENT)
 
     objects = CustomUserManager()
 

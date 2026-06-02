@@ -123,11 +123,19 @@ class ActivityViewSet(viewsets.ModelViewSet):
     filter_backends = []
     pagination_class = None
 
+    @staticmethod
+    def _normalize_category_param(category):
+        if category is None:
+            return None
+        return category.strip().strip('"').strip("'")
+
     def get_queryset(self):
         queryset = Activity.objects.all()
 
         if self.action == 'list':
-            category = self.request.query_params.get('category')
+            category = self._normalize_category_param(
+                self.request.query_params.get('category')
+            )
             if category:
                 if category not in ActivityCategory.values:
                     raise ValidationError({'category': 'Invalid category.'})
